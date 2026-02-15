@@ -171,32 +171,32 @@ const sampleTimetable = {
         ],
         Friday: [
           { subject: "Cloud Computing", time: "9 AM", professor: "Prof. Jakhar", room: "B121" },
-          { subject: "AI Ethics", time: "11 AM", professor: "Dr. Kamal", room: "C216" },
-          { subject: "Project Lab", time: "2 PM", professor: "Prof. Lalit", room: "LAB110" },
+          { subject: "AI Lab", time: "11 AM", professor: "Dr. Kishan", room: "LAB110" },
+          { subject: "Project", time: "2 PM", professor: "Prof. Lakshman", room: "C216" },
         ],
       },
     },
-    IT3: {
+    AIML: {
       "2027": {
         Monday: [
-          { subject: "Machine Learning", time: "9 AM", professor: "Prof. Mahesh", room: "B122" },
-          { subject: "Database Systems", time: "11 AM", professor: "Dr. Nayan", room: "C114" },
-          { subject: "Networks", time: "2 PM", professor: "Prof. Omkar", room: "B219" },
+          { subject: "Maths", time: "9 AM", professor: "Prof. Mohit", room: "B122" },
+          { subject: "Machine Learning", time: "11 AM", professor: "Dr. Neeraj", room: "C114" },
+          { subject: "Deep Learning", time: "2 PM", professor: "Prof. Omkar", room: "B219" },
         ],
         Tuesday: [
-          { subject: "AI", time: "10 AM", professor: "Dr. Pranav", room: "C217" },
-          { subject: "Web Development", time: "1 PM", professor: "Prof. Qamar", room: "B123" },
-          { subject: "English", time: "3 PM", professor: "Ms. Rina", room: "A113" },
+          { subject: "Data Structures", time: "10 AM", professor: "Dr. Pankaj", room: "C217" },
+          { subject: "Python Programming", time: "1 PM", professor: "Prof. Quentin", room: "B123" },
+          { subject: "English", time: "3 PM", professor: "Ms. Rani", room: "A113" },
         ],
         Wednesday: [
-          { subject: "Cloud Computing", time: "9 AM", professor: "Prof. Sunil", room: "B220" },
-          { subject: "Big Data", time: "11 AM", professor: "Dr. Tarun", room: "C115" },
-          { subject: "Cybersecurity", time: "2 PM", professor: "Prof. Uday", room: "B124" },
+          { subject: "Neural Networks", time: "9 AM", professor: "Prof. Sachin", room: "B220" },
+          { subject: "Operating Systems", time: "11 AM", professor: "Dr. Tushar", room: "C115" },
+          { subject: "Cybersecurity", time: "2 PM", professor: "Prof. Uma", room: "B124" },
         ],
         Thursday: [
-          { subject: "Data Structures", time: "10 AM", professor: "Dr. Vijay", room: "C218" },
-          { subject: "Algorithms", time: "12 PM", professor: "Prof. Wasim", room: "B221" },
-          { subject: "Project Management", time: "3 PM", professor: "Dr. Xavier", room: "C116" },
+          { subject: "AI Lab", time: "10 AM", professor: "Dr. Vikas", room: "LAB111" },
+          { subject: "Web Development", time: "12 PM", professor: "Prof. Wasim", room: "B221" },
+          { subject: "Big Data", time: "3 PM", professor: "Dr. Xander", room: "C218" },
         ],
         Friday: [
           { subject: "AI Ethics", time: "9 AM", professor: "Prof. Yash", room: "B125" },
@@ -260,49 +260,43 @@ const Timetable = () => {
   };
 
   const handleUpdate = async (e) => {
-    e.preventDefault();
-    const newSubject = e.target.newSubject.value.trim();
-    const newProfessor = e.target.newProfessor.value.trim();
-    const newRoom = e.target.newRoom.value.trim();
-    const newDay = e.target.newDay.value;
-    const newTime = e.target.newTime.value;
+  e.preventDefault();
+  const newSubject = e.target.newSubject.value.trim();
+  const newTime = e.target.newTime.value.trim();
 
-    if (newSubject && newProfessor && newRoom && newDay && newTime && selectedYear && selectedDepartment) {
-      const newClass = {
-        subject: newSubject,
-        time: newTime,
-        professor: newProfessor,
-        room: newRoom
-      };
+  if (newSubject && newTime && selectedYear && selectedDepartment && selectedDay) {
+    const newSchedule = `${newSubject} - ${newTime}`;
+    setUpdatedTimetable((prev) => ({
+      ...prev,
+      [selectedDepartment]: {
+        ...prev[selectedDepartment],
+        [selectedYear]: {
+          ...prev[selectedDepartment][selectedYear],
+          [selectedDay]: [...(prev[selectedDepartment][selectedYear][selectedDay] || []), newSchedule],
+        },
+      },
+    }));
+    e.target.reset();
 
-      setUpdatedTimetable((prev) => {
-        const newTimetable = JSON.parse(JSON.stringify(prev));
-        if (!newTimetable[selectedDepartment][selectedYear][newDay]) {
-          newTimetable[selectedDepartment][selectedYear][newDay] = [];
-        }
-        newTimetable[selectedDepartment][selectedYear][newDay].push(newClass);
-        return newTimetable;
+    alert("Timetable updated successfully!");
+
+    // Call backend to notify students
+    try {
+      await fetch(`${process.env.REACT_APP_API_URL}/notify-timetable-update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ link: window.location.href })
       });
-
-      e.target.reset();
-      alert("Timetable updated successfully!");
-
-      // Call backend to notify students
-      try {
-        await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/notify-timetable-update`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ link: window.location.href })
-        });
-        alert("Students have been notified via email!");
-      } catch (err) {
-        console.error(err);
-        alert("Failed to notify students.");
-      }
-    } else {
-      alert("Please fill in all fields!");
+      alert("Students have been notified via email!");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to notify students.");
     }
-  };
+  } else {
+    alert("Please fill in all fields and select year, department, and day!");
+  }
+};
+
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -462,6 +456,81 @@ const Timetable = () => {
         )}
         {isCR && (
           <button className="tt-btn" onClick={() => setIsCR(false)}>Logout</button>
+        )}
+      </div>
+
+      {selectedYear && (
+        <div className="department-selector">
+          <h2>Select Department</h2>
+          {Object.keys(sampleTimetable).map((dept) => (
+            <button
+              key={dept}
+              className={`tt-btn ${selectedDepartment === dept ? "tt-btn-selected" : ""}`}
+              onClick={() => setSelectedDepartment(dept)}
+            >
+              {dept}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {selectedDepartment && (
+        <div className="day-selector">
+          <h2>Select Day</h2>
+          {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day) => (
+            <button
+              key={day}
+              className={`tt-btn ${selectedDay === day ? "tt-btn-selected" : ""}`}
+              onClick={() => setSelectedDay(day)}
+            >
+              {day}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {selectedDay && (
+        <div className="timetable-display">
+          <h2>Timetable for {selectedDay}</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Subject</th>
+              </tr>
+            </thead>
+            <tbody>
+              {updatedTimetable[selectedDepartment]?.[selectedYear]?.[selectedDay]?.map((item, index) => {
+                const [subject, time] = item.split(" - ");
+                return (
+                  <tr key={index}>
+                    <td>{time}</td>
+                    <td>{subject}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {selectedDay && isCR && (
+        <form className="update-form" onSubmit={handleUpdate}>
+          <h2>Update Timetable</h2>
+          <input type="text" name="newSubject" placeholder="Enter subject (e.g., Maths)" />
+          <input type="text" name="newTime" placeholder="Enter time (e.g., 9 AM)" />
+          <button type="submit" className="tt-btn">Update</button>
+        </form>
+      )}
+
+      <div className="login-section">
+        {!isCR && (
+          <form onSubmit={handleLogin}>
+            <h2>CR Login</h2>
+            <input type="text" name="userId" placeholder="User ID" />
+            <input type="password" name="password" placeholder="Password" />
+            <button type="submit" className="tt-btn">Login</button>
+          </form>
         )}
       </div>
     </div>
